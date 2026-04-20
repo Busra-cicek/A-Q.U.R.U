@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HAREKET PROJE – Personel Evrak Sistemi</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',Tahoma,Geneva,sans-serif;font-size:13px;background:#f0f2f5;color:#333;display:flex;flex-direction:column;min-height:100vh}
+
+/* ─── TOP BAR ─── */
+.topbar{background:#1e3a50;color:#fff;height:46px;display:flex;align-items:center;padding:0 18px;gap:16px;position:fixed;top:0;left:0;right:0;z-index:300;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.topbar-brand{font-size:16px;font-weight:700;letter-spacing:.03em;white-space:nowrap}
+.topbar-menu-toggle{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:4px 6px;border-radius:4px;line-height:1}
+.topbar-menu-toggle:hover{background:rgba(255,255,255,.12)}
+.topbar-right{margin-left:auto;font-size:12px;color:rgba(255,255,255,.75);white-space:nowrap}
+
+/* ─── LAYOUT ─── */
+.layout{display:flex;margin-top:46px;min-height:calc(100vh - 46px)}
+
+/* ─── SIDEBAR ─── */
+.sidebar{width:190px;background:#243447;flex-shrink:0;position:fixed;top:46px;left:0;bottom:0;overflow-y:auto;z-index:200;transition:transform .25s}
+.sidebar::-webkit-scrollbar{width:4px}.sidebar::-webkit-scrollbar-track{background:transparent}.sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:2px}
+.nav-item{display:flex;align-items:center;gap:9px;padding:10px 16px;color:rgba(255,255,255,.78);cursor:pointer;text-decoration:none;font-size:12.5px;transition:background .15s,color .15s;position:relative}
+.nav-item:hover,.nav-item.active{background:#1a2d3e;color:#fff}
+.nav-item.active::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:#3fa8d6;border-radius:0 2px 2px 0}
+.nav-item .nav-ico{width:16px;text-align:center;font-size:13px;flex-shrink:0}
+.nav-item .nav-arrow{margin-left:auto;font-size:10px;transition:transform .2s;color:rgba(255,255,255,.4)}
+.nav-item.open .nav-arrow{transform:rotate(90deg)}
+.nav-sub{background:#1a2d3e;overflow:hidden;max-height:0;transition:max-height .25s ease}
+.nav-sub.open{max-height:200px}
+.nav-sub .nav-item{padding-left:36px;font-size:12px;color:rgba(255,255,255,.62)}
+.nav-sub .nav-item:hover,.nav-sub .nav-item.active{color:#fff;background:#152537}
+.nav-divider{border-top:1px solid rgba(255,255,255,.08);margin:4px 0}
+
+/* ─── CONTENT ─── */
+.content{margin-left:190px;flex:1;padding:22px 24px;min-width:0}
+
+/* ─── PAGE TITLE ─── */
+.page-title{font-size:18px;font-weight:600;margin-bottom:14px;color:#1e3a50}
+
+/* ─── ALERT BAR ─── */
+.alert-bar{background:#fff8e1;border:1px solid #ffe082;border-radius:5px;padding:10px 14px;font-size:12.5px;color:#7a5c00;margin-bottom:16px;line-height:1.5}
+
+/* ─── TOOLBAR ROW ─── */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.btn{padding:6px 14px;border-radius:4px;font-family:inherit;font-size:12.5px;font-weight:500;cursor:pointer;transition:all .15s;border:1px solid transparent;display:inline-flex;align-items:center;gap:5px}
+.btn-primary{background:#1976d2;color:#fff;border-color:#1976d2}.btn-primary:hover{background:#1565c0}
+.btn-success{background:#2e7d32;color:#fff;border-color:#2e7d32}.btn-success:hover{background:#1b5e20}
+.btn-outline{background:#fff;color:#333;border-color:#bbb}.btn-outline:hover{border-color:#1976d2;color:#1976d2}
+.btn-danger{background:#fff;color:#c62828;border-color:#c62828}.btn-danger:hover{background:#c62828;color:#fff}
+.btn-sm{padding:4px 10px;font-size:12px}
+.ml-auto{margin-left:auto}
+
+/* ─── SEARCH INPUTS ROW ─── */
+.col-search{width:100%;padding:3px 6px;border:1px solid #ccc;border-radius:3px;font-size:12px;color:#333;font-family:inherit;background:#fff}
+.col-search:focus{outline:none;border-color:#1976d2}
+
+/* ─── TABLE ─── */
+.tbl-wrap{background:#fff;border:1px solid #dde3ec;border-radius:6px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.tbl-wrap table{width:100%;border-collapse:collapse}
+.tbl-wrap thead th{background:#f5f6fa;border-bottom:1px solid #dde3ec;padding:8px 10px;font-size:12px;font-weight:600;color:#555;text-align:left;white-space:nowrap}
+.tbl-wrap thead th.sortable{cursor:pointer;user-select:none}
+.tbl-wrap thead th.sortable:hover{background:#eceff5;color:#1976d2}
+.tbl-wrap tbody tr{border-bottom:1px solid #f0f3f7;transition:background .1s}
+.tbl-wrap tbody tr:last-child{border-bottom:none}
+.tbl-wrap tbody tr:hover{background:#f5f9ff}
+.tbl-wrap tbody td{padding:8px 10px;vertical-align:middle}
+.tbl-wrap .search-row td{padding:4px 10px;background:#fafbfd}
+
+/* action links */
+.act-link{color:#1976d2;text-decoration:none;font-size:12px;cursor:pointer;transition:color .15s}
+.act-link:hover{color:#0d47a1;text-decoration:underline}
+.act-sep{color:#bbb;margin:0 3px;font-size:11px}
+
+/* checkmark */
+.chk-yes{color:#1976d2;font-weight:700;font-size:14px}
+
+/* status badge */
+.sbadge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500}
+.sbadge-ok{background:#e8f5e9;color:#2e7d32}
+.sbadge-warn{background:#fff8e1;color:#f57f17}
+.sbadge-err{background:#ffebee;color:#c62828}
+.sbadge-gray{background:#f0f2f5;color:#777}
+
+/* progress bar inline */
+.pbar-wrap{display:flex;align-items:center;gap:6px}
+.pbar{flex:1;background:#e8edf2;border-radius:99px;height:6px;overflow:hidden;min-width:50px}
+.pbar-fill{height:100%;border-radius:99px;transition:width .3s}
+.pbar-lbl{font-size:11px;font-weight:600;white-space:nowrap}
+
+/* pagination */
+.pagination{display:flex;align-items:center;gap:3px;padding:10px 12px;background:#fafbfd;border-top:1px solid #eee;flex-wrap:wrap}
+.pg-btn{min-width:28px;height:26px;border:1px solid #ddd;border-radius:3px;background:#fff;font-size:12px;color:#333;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0 6px}
+.pg-btn:hover{border-color:#1976d2;color:#1976d2}
+.pg-btn.active{background:#1976d2;color:#fff;border-color:#1976d2;font-weight:600}
+.pg-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ─── BELGELER PAGE ─── */
+.doc-table-wrap{background:#fff;border:1px solid #dde3ec;border-radius:6px;overflow-x:auto;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.doc-table-wrap table{width:100%;border-collapse:collapse;min-width:900px}
+.doc-table-wrap thead th{background:#f5f6fa;border-bottom:1px solid #dde3ec;padding:9px 10px;font-size:11.5px;font-weight:600;color:#444;white-space:nowrap;text-align:left}
+.doc-table-wrap tbody tr{border-bottom:1px solid #f0f3f7;transition:background .1s}
+.doc-table-wrap tbody tr:last-child{border-bottom:none}
+.doc-table-wrap tbody tr:hover{background:#f8fafd}
+.doc-table-wrap tbody td{padding:8px 10px;vertical-align:middle;font-size:12.5px}
+.doc-name-cell .doc-nm{font-weight:500;color:#1a2b3c}
+.doc-name-cell .doc-note{font-size:11px;color:#999;margin-top:1px}
+.date-inp{border:1px solid #ccc;border-radius:3px;padding:4px 6px;font-size:12px;color:#333;font-family:inherit;background:#fafafa;width:115px}
+.date-inp:focus{outline:none;border-color:#1976d2;background:#fff}
+.date-inp:disabled{opacity:.35;cursor:not-allowed;background:#f5f5f5}
+.date-exp{border-color:#c62828!important;background:#fff8f8!important}
+.date-warn{border-color:#f57f17!important;background:#fffde7!important}
+.upload-label{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border:1px solid #bbb;border-radius:3px;cursor:pointer;font-size:12px;color:#555;background:#fafafa;transition:all .15s;white-space:nowrap}
+.upload-label:hover{border-color:#1976d2;color:#1976d2;background:#e3f2fd}
+.upload-label.has-file{border-color:#1976d2;color:#1976d2;background:#e3f2fd}
+.upload-hidden{display:none}
+.file-nm{font-size:11px;color:#777;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ts{font-size:11.5px;color:#777;white-space:nowrap}
+.note-txt{font-size:11.5px;color:#888;max-width:160px}
+.cat-row td{background:#ecf3fb;font-weight:600;color:#1a3a5c;font-size:12.5px;padding:7px 12px;border-top:1px solid #dde3ec;cursor:pointer;user-select:none}
+.cat-row td:hover{background:#ddeaf7}
+
+/* ─── MODAL ─── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:8px;padding:24px;width:90%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.2);position:relative}
+.modal-title{font-size:16px;font-weight:600;color:#1e3a50;margin-bottom:4px}
+.modal-sub{font-size:12.5px;color:#777;margin-bottom:18px}
+.modal-close{position:absolute;top:14px;right:16px;background:none;border:none;font-size:18px;cursor:pointer;color:#aaa;line-height:1}
+.modal-close:hover{color:#333}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.form-row.full{grid-template-columns:1fr}
+.form-field{display:flex;flex-direction:column;gap:4px}
+.form-field label{font-size:11.5px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.04em}
+.form-field input,.form-field select,.form-field textarea{border:1px solid #ccc;border-radius:4px;padding:7px 9px;font-family:inherit;font-size:13px;color:#333;background:#fafafa;transition:border .15s}
+.form-field input:focus,.form-field select:focus,.form-field textarea:focus{outline:none;border-color:#1976d2;background:#fff}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px;border-top:1px solid #eee;padding-top:14px}
+
+/* CSV upload area */
+.drop-zone{border:2px dashed #bbb;border-radius:6px;padding:24px;text-align:center;cursor:pointer;transition:all .2s;background:#fafbfd}
+.drop-zone:hover,.drop-zone.drag{border-color:#1976d2;background:#e3f2fd}
+.drop-zone-icon{font-size:32px;margin-bottom:8px}
+.drop-zone-txt{font-size:13px;color:#777}
+.drop-zone-txt b{color:#1976d2}
+.csv-preview{margin-top:12px;font-size:12px;color:#555;background:#f5f7fa;border-radius:4px;padding:8px 12px;max-height:140px;overflow-y:auto;display:none}
+
+/* Toast */
+.toast{position:fixed;bottom:22px;right:22px;padding:10px 16px;border-radius:6px;font-size:13px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.2);z-index:9999;transform:translateY(60px);opacity:0;transition:all .3s;pointer-events:none;max-width:340px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast-ok{background:#2e7d32;color:#fff}
+.toast-err{background:#c62828;color:#fff}
+.toast-info{background:#1565c0;color:#fff}
+
+/* View file modal */
+.file-preview{border:1px solid #ddd;border-radius:5px;padding:20px;text-align:center;background:#fafafa;min-height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;margin-bottom:14px}
+.file-preview .fp-ico{font-size:40px}
+.file-preview .fp-nm{font-size:13px;font-weight:500}
+.file-preview .fp-sz{font-size:12px;color:#777}
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <button class="topbar-menu-toggle" onclick="toggleSidebar()" title="Menüyü Aç/Kapat">☰</button>
+  <div class="topbar-brand" style="font-size:17px;letter-spacing:.06em;font-weight:800">HAREKET PROJE</div>
+  <div class="topbar-right" id="topbarRight">HAREKET PROJE TAŞIMACILIĞI VE YÜK MÜH. A.Ş.</div>
+</div>
+
+<!-- SIDEBAR -->
+<div class="sidebar" id="sidebar">
+  <a class="nav-item open active" id="nav-personeller" onclick="toggleNav(this,'sub-pers')">
+    <span class="nav-ico">👥</span> Personeller
+    <span class="nav-arrow">▶</span>
+  </a>
+  <div class="nav-sub open" id="sub-pers">
+    <a class="nav-item active" onclick="showView('list')"><span class="nav-ico">📋</span> Personel Listesi</a>
+    <a class="nav-item" onclick="showAddModal()"><span class="nav-ico">➕</span> Personel Ekle</a>
+    <a class="nav-item" onclick="showExpiryView()"><span class="nav-ico">⏰</span> Süreli Belgeler</a>
+  </div>
+  <div class="nav-divider"></div>
+  <a class="nav-item" onclick="toggleNav(this,'sub-arac')">
+    <span class="nav-ico">🚗</span> Araçlar
+    <span class="nav-arrow">▶</span>
+  </a>
+  <div class="nav-sub" id="sub-arac">
+    <a class="nav-item" href="#"><span class="nav-ico">📋</span> Araç Listesi</a>
+    <a class="nav-item" href="#"><span class="nav-ico">➕</span> Araç Ekle</a>
+  </div>
+  <div class="nav-divider"></div>
+  <a class="nav-item" onclick="showHelp()"><span class="nav-ico">❓</span> Yardım</a>
+</div>
+
+<!-- CONTENT -->
+<div class="layout">
+  <div class="content" id="content">
+
+    <!-- ═══ VIEW: LIST ═══ -->
+    <div id="view-list">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div class="page-title" style="margin-bottom:0">Personel Listesi</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-success" onclick="showAddModal()">➕ Personel Ekle</button>
+          <button class="btn btn-primary" onclick="showCSVModal()">📥 Excel/CSV İçe Aktar</button>
+          <button class="btn btn-outline" onclick="exportReport()">📊 Eksik Evrak Raporu</button>
+          <button class="btn btn-outline" onclick="exportCSV()">⬇ Listeyi İndir</button>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px" id="statsBar"></div>
+
+      <!-- Table -->
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable" onclick="sortBy('ad')" style="min-width:80px">Ad <i class="sort-ico"></i></th>
+              <th class="sortable" onclick="sortBy('soyad')" style="min-width:90px">Soyad <i class="sort-ico"></i></th>
+              <th class="sortable" onclick="sortBy('meslek')" style="min-width:160px">Meslek <i class="sort-ico"></i></th>
+              <th class="sortable" onclick="sortBy('dept')" style="min-width:160px">Departman <i class="sort-ico"></i></th>
+              <th class="sortable" onclick="sortBy('tamamlama')" style="min-width:130px">Tamamlama <i class="sort-ico"></i></th>
+              <th style="min-width:70px">Kartı Var?</th>
+              <th style="min-width:220px">İşlemler</th>
+            </tr>
+            <tr class="search-row">
+              <td><input class="col-search" id="s-ad" oninput="renderList()" placeholder="Ad ara..."></td>
+              <td><input class="col-search" id="s-soyad" oninput="renderList()" placeholder="Soyad ara..."></td>
+              <td><input class="col-search" id="s-meslek" oninput="renderList()" placeholder="Meslek ara..."></td>
+              <td>
+                <select class="col-search" id="s-dept" onchange="renderList()" style="width:100%">
+                  <option value="">Tüm Departmanlar</option>
+                  <option>VİNÇ MÜDÜRLÜĞÜ</option>
+                  <option>PROJELER KOORDİNATÖRLÜĞÜ</option>
+                  <option>RENTH OPERASYON MÜDÜRLÜĞÜ</option>
+                  <option>SEÇK MÜDÜRLÜĞÜ</option>
+                  <option>İDARİ İŞLER</option>
+                  <option>DEPO MÜDÜRLÜĞÜ</option>
+                </select>
+              </td>
+              <td><input class="col-search" id="s-durum-dummy" style="display:none"></td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
+          </thead>
+          <tbody id="listBody"></tbody>
+        </table>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: BELGELER ═══ -->
+    <div id="view-belgeler" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn btn-outline btn-sm" onclick="showView('list')">← Geri</button>
+        <div class="page-title" style="margin-bottom:0" id="belge-title">PERSONEL ADI Belgeler</div>
+        <div style="margin-left:auto;display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="exportPersonReport()">📊 Rapor Al</button>
+        </div>
+      </div>
+
+      <div class="alert-bar">
+        <b>Süresi geçmiş</b> belgeleri veya <b>uygunsuzluk verilmiş</b> belgeleri aşağıdaki düğmeyi tıklayarak başvurular ekranından da onaya gönderebilirsiniz.
+      </div>
+
+      <div class="toolbar" style="margin-bottom:12px">
+        <button class="btn btn-primary btn-sm" id="basvuru-btn">🗂 Başvurular</button>
+        <div style="flex:1"></div>
+        <select class="btn btn-outline btn-sm" id="doc-filter-cat" onchange="renderDocTable()" style="border-radius:4px;padding:5px 8px">
+          <option value="">Tüm Kategoriler</option>
+          <option value="Kimlik ve Temel">Kimlik ve Temel</option>
+          <option value="SGK ve İstihdam">SGK ve İstihdam</option>
+          <option value="Sağlık ve İSG">Sağlık ve İSG</option>
+          <option value="Görev ve İdari">Görev ve İdari</option>
+          <option value="Eğitim">Eğitim</option>
+        </select>
+        <select class="btn btn-outline btn-sm" id="doc-filter-status" onchange="renderDocTable()" style="border-radius:4px;padding:5px 8px">
+          <option value="">Tüm Durumlar</option>
+          <option value="missing">Eksik (Zorunlu)</option>
+          <option value="uploaded">Yüklendi</option>
+          <option value="expired">Süresi Dolmuş</option>
+        </select>
+      </div>
+
+      <!-- Progress -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:12px 16px;box-shadow:0 1px 3px rgba(0,0,0,.05)">
+        <div style="font-size:12.5px;color:#555;white-space:nowrap">Tamamlama:</div>
+        <div class="pbar" style="flex:1"><div class="pbar-fill" id="det-prog-bar" style="width:0%;background:#1976d2"></div></div>
+        <div class="pbar-lbl" id="det-prog-pct" style="color:#1976d2">%0</div>
+        <div style="margin-left:16px;display:flex;gap:14px" id="det-stats"></div>
+      </div>
+
+      <div class="doc-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px">#</th>
+              <th style="min-width:220px">Belge Adı</th>
+              <th style="width:80px;text-align:center">Kalıcı/Geçici Kart</th>
+              <th style="width:80px;text-align:center">Uzman/Söz Kart</th>
+              <th style="width:80px;text-align:center">Araç Kart</th>
+              <th style="width:120px">Başlangıç Tarihi</th>
+              <th style="width:120px">Bitiş Tarihi</th>
+              <th style="width:130px">Kayıt Tarihi</th>
+              <th style="width:130px">Güncelleme</th>
+              <th style="min-width:140px">Not</th>
+              <th style="min-width:150px">İşlem</th>
+            </tr>
+          </thead>
+          <tbody id="docBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: SÜRELİ BELGELER ═══ -->
+    <div id="view-expiry" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div class="page-title" style="margin-bottom:0">⏰ Süreli Belgeler Takibi</div>
+        <button class="btn btn-outline btn-sm" onclick="exportExpiryReport()">📊 Rapor İndir</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:16px" id="expiryStats"></div>
+      <div class="tbl-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Personel</th>
+              <th>Departman</th>
+              <th>Belge</th>
+              <th>Başlangıç Tarihi</th>
+              <th>Bitiş Tarihi</th>
+              <th>Kalan Gün</th>
+              <th>Durum</th>
+            </tr>
+          </thead>
+          <tbody id="expiryBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- MODAL: Yardım -->
+<div class="overlay" id="helpModal">
+  <div class="modal" style="max-width:480px">
+    <button class="modal-close" onclick="closeModal('helpModal')">✕</button>
+    <div class="modal-title">❓ Yardım</div>
+    <div class="modal-sub">HAREKET PROJE – Personel Evrak Yönetim Sistemi</div>
+    <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#444;line-height:1.6">
+      <div style="background:#f5f7fa;border-radius:5px;padding:12px">
+        <b style="color:#1e3a50">📋 Personel Listesi</b><br>
+        Tüm personeli görüntüleyin, arayın, filtreleyin. Satıra tıklayarak evrak detayına girebilirsiniz.
+      </div>
+      <div style="background:#f5f7fa;border-radius:5px;padding:12px">
+        <b style="color:#1e3a50">📄 Evrak Yükleme</b><br>
+        Her personelin evrak sayfasından belge yükleyin. Zorunlu belgeler ✓ ile işaretlidir. Tarihli belgeler için başlangıç/bitiş tarihi giriniz.
+      </div>
+      <div style="background:#f5f7fa;border-radius:5px;padding:12px">
+        <b style="color:#1e3a50">⏰ Süreli Belgeler</b><br>
+        Süresi dolmuş veya 30 gün içinde dolacak belgeler burada listelenir. Renk kodu: 🔴 Dolmuş, 🟡 Yakında Dolacak, 🟢 Geçerli.
+      </div>
+      <div style="background:#f5f7fa;border-radius:5px;padding:12px">
+        <b style="color:#1e3a50">📥 Toplu Personel Ekle</b><br>
+        CSV şablonu indirip doldurun ve sisteme yükleyin. Sütunlar: Ad, Soyad, Meslek, Departman, İşe Giriş Tarihi, Sicil No.
+      </div>
+      <div style="background:#fff8e1;border:1px solid #ffe082;border-radius:5px;padding:10px;font-size:12px;color:#7a5c00">
+        ⚠️ Tüm veriler tarayıcıda saklanır. Farklı bir cihazdan erişmek için raporu dışa aktarmanız önerilir.
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-primary btn-sm" onclick="closeModal('helpModal')">Anladım</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Personel Ekle/Düzenle -->
+<div class="overlay" id="addModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addModal')">✕</button>
+    <div class="modal-title" id="addModalTitle">Personel Ekle</div>
+    <div class="modal-sub">Personel bilgilerini girin.</div>
+    <div class="form-row">
+      <div class="form-field"><label>Ad</label><input id="f-ad" placeholder="Ad"></div>
+      <div class="form-field"><label>Soyad</label><input id="f-soyad" placeholder="Soyad"></div>
+    </div>
+    <div class="form-row full">
+      <div class="form-field"><label>Meslek / Unvan</label><input id="f-meslek" placeholder="örn. Vinç Operatörü"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><label>Departman</label>
+        <select id="f-dept">
+          <option>Saha Operasyonları</option>
+          <option>İdari</option>
+          <option>Teknik</option>
+          <option>İş Güvenliği</option>
+          <option>Lojistik</option>
+          <option>İnsan Kaynakları</option>
+          <option>Diğer</option>
+        </select>
+      </div>
+      <div class="form-field"><label>İşe Giriş Tarihi</label><input id="f-entry" type="date"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-field"><label>Sicil No</label><input id="f-sicil" placeholder="0001"></div>
+      <div class="form-field"><label>Telefon</label><input id="f-tel" placeholder="0500 000 00 00"></div>
+    </div>
+    <div class="form-row full">
+      <div class="form-field">
+        <label>Kart Türü</label>
+        <select id="f-kart">
+          <option value="">Seçiniz</option>
+          <option>Kalıcı Kart</option>
+          <option>Geçici Kart</option>
+          <option>Uzman Kart</option>
+          <option>Söz. Kart</option>
+          <option>Danışman Kart</option>
+          <option>Araç Kart</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('addModal')">İptal</button>
+      <button class="btn btn-primary btn-sm" onclick="savePersonel()">💾 Kaydet</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CSV İçe Aktar -->
+<div class="overlay" id="csvModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('csvModal')">✕</button>
+    <div class="modal-title">Excel / CSV İçe Aktar</div>
+    <div class="modal-sub">CSV dosyasını sürükleyip bırakın veya seçin. Şablon formatını indirerek de kullanabilirsiniz.</div>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('csvFile').click()" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropFile(event)">
+      <div class="drop-zone-icon">📂</div>
+      <div class="drop-zone-txt"><b>Tıklayın</b> veya dosyayı buraya sürükleyin<br><span style="font-size:11px;color:#aaa">CSV veya Excel formatı (.csv)</span></div>
+    </div>
+    <input type="file" id="csvFile" accept=".csv" style="display:none" onchange="loadCSV(this)">
+    <div class="csv-preview" id="csvPreview"></div>
+    <div style="margin-top:10px;display:flex;align-items:center;gap:8px">
+      <button class="btn btn-outline btn-sm" onclick="downloadTemplate()">⬇ Şablon İndir (.csv)</button>
+      <div style="font-size:11.5px;color:#777">Sütunlar: Ad, Soyad, Meslek, Departman, İşe Giriş Tarihi, Sicil No, Telefon</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('csvModal')">İptal</button>
+      <button class="btn btn-primary btn-sm" id="csvImportBtn" onclick="importCSV()" disabled>📥 İçe Aktar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Dosya Görüntüle -->
+<div class="overlay" id="viewModal">
+  <div class="modal" style="max-width:400px">
+    <button class="modal-close" onclick="closeModal('viewModal')">✕</button>
+    <div class="modal-title" id="vm-title">Evrak Görüntüle</div>
+    <div class="modal-sub" id="vm-sub"></div>
+    <div class="file-preview">
+      <div class="fp-ico" id="vm-ico">📄</div>
+      <div class="fp-nm" id="vm-nm">—</div>
+      <div class="fp-sz" id="vm-sz">—</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('viewModal')">Kapat</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ─── EVRAK DEFİNİTIONS ───
+const DOCS = [
+  {cat:"Kimlik ve Temel", id:"fotograf",    name:"Fotoğraf",                              req1:1,req2:1,req3:0, hasDate:0, note:"Vesikalık, son 6 ay"},
+  {cat:"Kimlik ve Temel", id:"nufus",       name:"Nüfus Cüzdanı / Kimlik Kartı",         req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Kimlik ve Temel", id:"ikametgah",   name:"İkametgah Belgesi",                    req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Kimlik ve Temel", id:"adli_sicil",  name:"Adli Sicil Kaydı Arşiv Kayıtlı",      req1:1,req2:1,req3:0, hasDate:1, note:"Sabıka evraklarının geçerlilik süresi 6 aydır"},
+  {cat:"Kimlik ve Temel", id:"askerlik",    name:"Askerlik Durum Belgesi",               req1:0,req2:0,req3:0, hasDate:0, note:"Erkek personeller için"},
+  {cat:"SGK ve İstihdam", id:"sgk_giris",   name:"SGK İşe Giriş Bildirgesi",             req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"SGK ve İstihdam", id:"sgk_hizmet",  name:"SGK Son Ay Hizmet Dökümü",             req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"SGK ve İstihdam", id:"ehliyet",     name:"Ehliyet",                               req1:0,req2:0,req3:1, hasDate:1, note:"Araç kullanacaklar için"},
+  {cat:"SGK ve İstihdam", id:"operatorluk", name:"Operatörlük Belgesi (MYK)",            req1:0,req2:1,req3:0, hasDate:1, note:""},
+  {cat:"Sağlık ve İSG",  id:"isg_pasaport",name:"SOCAR İSG Eğitim Pasaportu",           req1:1,req2:1,req3:0, hasDate:1, note:"Yüklenici İSG Eğitimi"},
+  {cat:"Sağlık ve İSG",  id:"ise_per",     name:"SOCAR İşe Giriş Periyodik Formu",      req1:1,req2:1,req3:0, hasDate:1, note:""},
+  {cat:"Sağlık ve İSG",  id:"saglik_bir",  name:"İşe Giriş Sağlık Raporu – BİRİZMİR",  req1:1,req2:1,req3:0, hasDate:1, note:""},
+  {cat:"Sağlık ve İSG",  id:"saglik_ek2",  name:"İşe Giriş Sağlık Raporu – Ek 2",      req1:1,req2:1,req3:0, hasDate:1, note:""},
+  {cat:"Sağlık ve İSG",  id:"isg_egitim",  name:"İSG Temel Eğitimi Katılım Belgesi (16 Saat)", req1:1,req2:1,req3:0, hasDate:1, note:"İSG Eğitimi Sertifikası Toplamda 16 Saat olmalı ve Tüm İmza Kaşeler Tamamlanmalı"},
+  {cat:"Sağlık ve İSG",  id:"oryantasyon", name:"İşe Başlama Eğitimi",                  req1:1,req2:1,req3:0, hasDate:0, note:"Firmanın çalışanına verdiği en az 2 saatlik eğitim"},
+  {cat:"Sağlık ve İSG",  id:"kkd",         name:"KKD Formu",                             req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Sağlık ve İSG",  id:"isg_sozlesme",name:"İSG Uzmanı için İSG-Katip Sözleşmesi", req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Sağlık ve İSG",  id:"mes_yeter",   name:"Mesleki Yeterlilik Belgesi",            req1:1,req2:1,req3:0, hasDate:1, note:""},
+  {cat:"Görev ve İdari", id:"personel_bilgi",name:"Personel Bilgi Formu (Özgeçmiş)",    req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Görev ve İdari", id:"gorev_tanimi",name:"Görev Tanımı",                          req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Görev ve İdari", id:"pers_is",     name:"Personel-İş Tanımı (Görev ve Sorumluluklar)", req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Görev ve İdari", id:"kvkk",        name:"KVK – Ziyaretçi Aydınlatma Metni ve Kişisel Veri İşleme Beyan Formu", req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Görev ve İdari", id:"gizlilik",    name:"Gizlilik Taahhütnamesi",                req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Görev ve İdari", id:"disiplin",    name:"Disiplin Yönetmeliği",                  req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Görev ve İdari", id:"fazla_mesai", name:"Fazla Mesai Muvafakatnamesi",           req1:0,req2:0,req3:0, hasDate:0, note:""},
+  {cat:"Görev ve İdari", id:"evrak_tut",   name:"Evrak Teslim Tutanağı",                req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Görev ve İdari", id:"socar_gorev", name:"SOCAR Geçici Görevlendirme",           req1:0,req2:0,req3:0, hasDate:1, note:""},
+  {cat:"Eğitim",         id:"eg_masraf",   name:"Eğitim Masraf Tablosu",                req1:0,req2:0,req3:0, hasDate:0, note:""},
+  {cat:"Eğitim",         id:"eg_prosedur", name:"Eğitim Prosedürü",                     req1:0,req2:0,req3:0, hasDate:0, note:""},
+  {cat:"Eğitim",         id:"eg_sozlesme", name:"Eğitim Sözleşmesi",                    req1:0,req2:0,req3:0, hasDate:0, note:""},
+  {cat:"Eğitim",         id:"sec_tahhut",  name:"Sağlık, Emniyet ve Çevre Taahhütnamesi", req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Eğitim",         id:"esya_tahhut", name:"Şirket Eşya Kullanım Taahhütnamesi",   req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Eğitim",         id:"yangin",      name:"Yangın Emniyet Talimatı",              req1:1,req2:1,req3:0, hasDate:0, note:""},
+  {cat:"Eğitim",         id:"pasaport_kart",name:"Pasaport Kartı Kullanım Talimatı",    req1:0,req2:0,req3:0, hasDate:0, note:""},
+];
+
+// ─── STATE ───
+let persons = [], docs_state = {}, editingId = null, activePersonId = null;
+let csvRows = [], sortCol = 'ad', sortDir = 1, currentPage = 1;
+const PER_PAGE = 20;
+
+function loadState(){
+  try{ persons = JSON.parse(localStorage.getItem('pes2_persons')||'[]'); }catch(e){ persons=[]; }
+  try{ docs_state = JSON.parse(localStorage.getItem('pes2_docs')||'{}'); }catch(e){ docs_state={}; }
+  if(!persons.length) persons = getSamplePersons();
+}
+function savePersons(){ localStorage.setItem('pes2_persons', JSON.stringify(persons)); }
+function saveDocs(){ localStorage.setItem('pes2_docs', JSON.stringify(docs_state)); }
+
+function getSamplePersons(){
+  const raw = [
+    ['ERKEK','10926','ADEM KURŞUN','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','10936','AHMET ERHAN','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11499','AHMET HAMDİ ERGİN','PROJELER KOORDİNATÖRLÜĞÜ','Mekanik Bakım Onarımcısı'],
+    ['ERKEK','11203','AHMET KORAY DOĞAN','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','10846','AHMET ÖNCE','PROJELER KOORDİNATÖRLÜĞÜ','Proje Yöneticisi'],
+    ['ERKEK','10982','AHMET ÖZCAN','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11723','AHMET ZAFER ŞAHİN','PROJELER KOORDİNATÖRLÜĞÜ','Elektrik Teknisyeni'],
+    ['ERKEK','11702','AYHAN ACARGÜL','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','10918','AYTAÇ ÇAYLAK','VİNÇ MÜDÜRLÜĞÜ','Ustabaşı/Postabaşı/Formen/Atölye Sorumlusu'],
+    ['ERKEK','11391','BEDRİ ÇELİK','RENTH OPERASYON MÜDÜRLÜĞÜ','Tır-Çekici Şoförü'],
+    ['ERKEK','11348','BURAK KARAGÖZ','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['KADIN','11491','BÜŞRA ÇİÇEK','PROJELER KOORDİNATÖRLÜĞÜ','Uzman (Genel)'],
+    ['ERKEK','11194','CÜNEYT BÖLÜKBAŞI','PROJELER KOORDİNATÖRLÜĞÜ','Traktör Şoförü'],
+    ['ERKEK','11382','ÇAYAN HALİSDEMİR','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11024','EMRE BAYILMAZ','VİNÇ MÜDÜRLÜĞÜ','Vinç Operatörü'],
+    ['ERKEK','11386','EMRE KAYA','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11338','FATİH KURNAZ','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11530','FERHAT DEMİR','PROJELER KOORDİNATÖRLÜĞÜ','Beko Loder Operatörü'],
+    ['ERKEK','11546','FERRUH ÜN','PROJELER KOORDİNATÖRLÜĞÜ','Mekanik Bakım Onarımcısı'],
+    ['ERKEK','11027','HACI TEKE','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11096','HAKAN ÇAYIROĞLU','İDARİ İŞLER','Servis Aracı Şoförü'],
+    ['ERKEK','11058','HAKAN ONBAŞIOĞLU','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11345','HAMDİ BULUT','RENTH OPERASYON MÜDÜRLÜĞÜ','İş Makineleri Operatörü'],
+    ['ERKEK','11547','HANİFİ YAŞAR KOÇ','VİNÇ MÜDÜRLÜĞÜ','Proje Mühendisi'],
+    ['ERKEK','11500','HASAN ALİ SAVAŞ','PROJELER KOORDİNATÖRLÜĞÜ','İş Makineleri Operatörü'],
+    ['ERKEK','11452','HASAN KARATAŞ','PROJELER KOORDİNATÖRLÜĞÜ','İş Makineleri Elektrik-Elektronik Bakım Onarımcısı'],
+    ['ERKEK','11454','HASAN KUŞKAPAN','PROJELER KOORDİNATÖRLÜĞÜ','İş Makineleri Elektrik-Elektronik Bakım Onarımcısı'],
+    ['KADIN','11580','HUMA KÜBRA ÖĞÜT','PROJELER KOORDİNATÖRLÜĞÜ','Uzman (Genel)'],
+    ['ERKEK','11066','HÜSEYİN SERTKAYA','VİNÇ MÜDÜRLÜĞÜ','Vinç Operatörü'],
+    ['ERKEK','10961','İBRAHİM ÇAKIR','RENTH OPERASYON MÜDÜRLÜĞÜ','Vinç Operatörü'],
+    ['ERKEK','11077','İSMAİL COMART','RENTH OPERASYON MÜDÜRLÜĞÜ','İş Makineleri Operatörü'],
+    ['ERKEK','10978','İSMAİL ŞAHBAZ','VİNÇ MÜDÜRLÜĞÜ','Vinç Operatörü'],
+    ['ERKEK','11383','İSMET AFŞAR','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11339','KADRİ DOMATACI','VİNÇ MÜDÜRLÜĞÜ','Mobil Vinç Operatörü'],
+    ['KADIN','10987','KÜBRA AKCENGİZ','SEÇK MÜDÜRLÜĞÜ','İş Güvenliği Uzmanı (Tehlikeli Sınıf-B)'],
+    ['ERKEK','11451','LEVENT TÜZÜN','PROJELER KOORDİNATÖRLÜĞÜ','Ustabaşı/Postabaşı/Formen/Atölye Sorumlusu'],
+    ['ERKEK','11627','MAHSUM ŞİMŞEK','VİNÇ MÜDÜRLÜĞÜ','Proje Mühendisi'],
+    ['ERKEK','11380','MEHMET EKREM DOĞAN','VİNÇ MÜDÜRLÜĞÜ','Mobil Vinç Operatörü'],
+    ['ERKEK','11056','MELİH BAŞDAR','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11346','MÖMİN İLDENİZ','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11167','MUHAMMED ÖMERİ','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11722','MUHARREM KÜL','PROJELER KOORDİNATÖRLÜĞÜ','Makine Bakım Onarım Teknisyeni'],
+    ['ERKEK','11379','MUHSİN KANAT','VİNÇ MÜDÜRLÜĞÜ','Mobil Vinç Operatörü'],
+    ['ERKEK','10916','MURAT EMİRALP ŞAHİN','DEPO MÜDÜRLÜĞÜ','Depo Sorumlusu'],
+    ['ERKEK','11344','MURAT HOŞGEZ','VİNÇ MÜDÜRLÜĞÜ','Vinç Operatörü'],
+    ['ERKEK','10838','MUSTAFA ÇATALKAYA','VİNÇ MÜDÜRLÜĞÜ','Proje Mühendisi'],
+    ['ERKEK','11518','MUSTAFA SUNAY','PROJELER KOORDİNATÖRLÜĞÜ','Tır-Çekici Şoförü'],
+    ['ERKEK','11093','MUSTAFA ŞAHİN','VİNÇ MÜDÜRLÜĞÜ','Mobil Vinç Operatörü'],
+    ['ERKEK','11358','MUSTAFA YAŞAR','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11716','OKTAY POLAT','VİNÇ MÜDÜRLÜĞÜ','Vinç Operatörü'],
+    ['ERKEK','10970','ONUR GÖRGÜ','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11789','OZAN BAĞUÇ','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11378','OZAN KAYA','VİNÇ MÜDÜRLÜĞÜ','Vinç Operatörü'],
+    ['ERKEK','11376','REŞAT CAN AKAY','SEÇK MÜDÜRLÜĞÜ','İş Sağlığı ve Güvenliği Teknikeri'],
+    ['ERKEK','10712','SABRİ DAYAN','PROJELER KOORDİNATÖRLÜĞÜ','İş Makineleri Tamircisi'],
+    ['ERKEK','10257','SALİH ZEKİ KONİ','PROJELER KOORDİNATÖRLÜĞÜ','Diğer Hizmet Müdürleri'],
+    ['ERKEK','11328','SAMET NUR','VİNÇ MÜDÜRLÜĞÜ','Rüzgar Enerji Sistemleri Teknisyeni'],
+    ['ERKEK','11453','SERKAN ÜÇSULAR','PROJELER KOORDİNATÖRLÜĞÜ','Proje Yöneticisi'],
+    ['ERKEK','11187','SEZER CANPOLAT','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['KADIN','11423','SULTAN AYAZ','SEÇK MÜDÜRLÜĞÜ','İş Güvenliği Uzmanı (Az Tehlikeli Sınıf-C)'],
+    ['ERKEK','11385','SÜLEYMAN KEBAPÇI','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','10927','ŞENOL UZUN','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['KADIN','11498','ŞERİFE TUĞÇE HOLT','SEÇK MÜDÜRLÜĞÜ','Uzman Yardımcısı (Genel)'],
+    ['ERKEK','10988','UĞUR AKTAY','VİNÇ MÜDÜRLÜĞÜ','Vinç Operatörü'],
+    ['ERKEK','11357','UĞUR BODUR','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11387','VEYSEL KARAMAN','RENTH OPERASYON MÜDÜRLÜĞÜ','İş Makineleri Operatörü'],
+    ['ERKEK','11166','VURAL OĞUR','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','10977','YUNUS ÖZDEMİR','VİNÇ MÜDÜRLÜĞÜ','Ustabaşı/Postabaşı/Formen/Atölye Sorumlusu'],
+    ['ERKEK','11359','YUSUF ŞAHİN','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+    ['ERKEK','11334','YUSUF TOKAY','VİNÇ MÜDÜRLÜĞÜ','Sapancı (Kaldırma Teçhizatlı)'],
+  ];
+  return raw.map((r, i) => {
+    const parts = r[2].trim().split(' ');
+    const soyad = parts[parts.length - 1];
+    const ad = parts.slice(0, parts.length - 1).join(' ');
+    return {
+      id: 'p' + (1000 + i),
+      cinsiyet: r[0], sicil: r[1],
+      ad, soyad,
+      meslek: r[4], dept: r[3],
+      entry: '', tel: '', kart: ''
+    };
+  });
+}
+
+// ─── PERSON COMPLETION ───
+function getPersonCompletion(pid){
+  const st = docs_state[pid]||{};
+  const required = DOCS.filter(d=>d.req1||d.req2);
+  let uploaded=0, expired=0, expiring=0;
+  required.forEach(d=>{
+    const s=st[d.id]||{};
+    if(s.file){ 
+      uploaded++;
+      if(d.hasDate && s.endDate){
+        const end=new Date(s.endDate), today=new Date();
+        const diff=(end-today)/(1000*60*60*24);
+        if(diff<0) expired++;
+        else if(diff<=30) expiring++;
+      }
+    }
+  });
+  return {total:required.length, uploaded, expired, expiring, pct:Math.round((uploaded/required.length)*100)};
+}
+
+function getPersonStatus(c){
+  if(c.expired>0) return 'exp';
+  if(c.uploaded===c.total) return 'ok';
+  return 'warn';
+}
+
+// ─── COLORS ───
+const AV_COLORS = ['#1565c0','#1b5e20','#4a148c','#e65100','#880e4f','#006064','#37474f','#b71c1c','#1a237e','#33691e'];
+function avColor(name){ let h=0; for(let c of name) h+=c.charCodeAt(0); return AV_COLORS[h%AV_COLORS.length]; }
+function initials(ad,soyad){ return ((ad[0]||'')+(soyad[0]||'')).toUpperCase(); }
+
+// ─── RENDER LIST ───
+function renderStats(){
+  const comps = persons.map(p=>getPersonCompletion(p.id));
+  const total=persons.length, complete=comps.filter(c=>c.pct===100).length;
+  const hasExp=comps.filter(c=>c.expired>0).length, hasMissing=comps.filter(c=>c.pct<100&&c.expired===0).length;
+  document.getElementById('statsBar').innerHTML=`
+    <div style="background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px">
+      <div style="font-size:22px">👥</div>
+      <div><div style="font-size:11px;color:#777;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Toplam</div><div style="font-size:22px;font-weight:700;color:#1e3a50">${total}</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px">
+      <div style="font-size:22px">✅</div>
+      <div><div style="font-size:11px;color:#777;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Tamamlandı</div><div style="font-size:22px;font-weight:700;color:#2e7d32">${complete}</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px">
+      <div style="font-size:22px">⚠️</div>
+      <div><div style="font-size:11px;color:#777;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Eksik Var</div><div style="font-size:22px;font-weight:700;color:#e65100">${hasMissing}</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px">
+      <div style="font-size:22px">🚨</div>
+      <div><div style="font-size:11px;color:#777;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Süresi Dolmuş</div><div style="font-size:22px;font-weight:700;color:#c62828">${hasExp}</div></div>
+    </div>
+  `;
+}
+
+function renderList(){
+  renderStats();
+  const sAd=(document.getElementById('s-ad').value||'').toLowerCase();
+  const sSoyad=(document.getElementById('s-soyad').value||'').toLowerCase();
+  const sMeslek=(document.getElementById('s-meslek').value||'').toLowerCase();
+  const sDept=document.getElementById('s-dept').value;
+  let filtered=persons.filter(p=>{
+    if(sAd && !p.ad.toLowerCase().includes(sAd)) return false;
+    if(sSoyad && !p.soyad.toLowerCase().includes(sSoyad)) return false;
+    if(sMeslek && !p.meslek.toLowerCase().includes(sMeslek)) return false;
+    if(sDept && p.dept!==sDept) return false;
+    return true;
+  });
+  filtered.sort((a,b)=>{
+    let av=sortCol==='tamamlama'?getPersonCompletion(a.id).pct:a[sortCol]||'';
+    let bv=sortCol==='tamamlama'?getPersonCompletion(b.id).pct:b[sortCol]||'';
+    if(typeof av==='string') av=av.toLowerCase();
+    if(typeof bv==='string') bv=bv.toLowerCase();
+    return (av<bv?-1:av>bv?1:0)*sortDir;
+  });
+  const total=filtered.length, pages=Math.max(1,Math.ceil(total/PER_PAGE));
+  if(currentPage>pages) currentPage=1;
+  const slice=filtered.slice((currentPage-1)*PER_PAGE, currentPage*PER_PAGE);
+  const tbody=document.getElementById('listBody');
+  if(!filtered.length){
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:#aaa">Sonuç bulunamadı.</td></tr>`;
+  } else {
+    tbody.innerHTML=slice.map(p=>{
+      const c=getPersonCompletion(p.id);
+      const st=getPersonStatus(c);
+      const col=st==='ok'?'#2e7d32':st==='exp'?'#c62828':'#e65100';
+      const pbarColor=st==='ok'?'#4caf50':st==='exp'?'#e53935':'#ff7043';
+      const statusTxt=st==='ok'?'Başvuru evraklarını yükleme aşamasına geçebilirsiniz.':
+                      st==='exp'?'Süresi dolmuş belge var — acil işlem gerekli.':
+                      'Başvuru evraklarını yükleme aşamasına geçebilirsiniz.';
+      const av=avColor(p.ad+p.soyad);
+      const ini=initials(p.ad,p.soyad);
+      return `<tr onclick="openBelgeler('${p.id}')" title="${p.ad} ${p.soyad} belgelerini görüntüle">
+        <td><div style="display:flex;align-items:center;gap:8px">
+          <div style="width:30px;height:30px;border-radius:50%;background:${av};color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0">${ini}</div>
+          <span style="font-weight:500">${p.ad}</span>
+        </div></td>
+        <td><b>${p.soyad}</b></td>
+        <td>${p.meslek}</td>
+        <td><span style="font-size:11.5px;color:#555;background:#f0f4f8;padding:2px 8px;border-radius:3px;white-space:nowrap">${p.dept||''}</span></td>
+        <td>
+          <div class="pbar-wrap">
+            <div class="pbar"><div class="pbar-fill" style="width:${c.pct}%;background:${pbarColor}"></div></div>
+            <span class="pbar-lbl" style="color:${pbarColor}">%${c.pct}</span>
+          </div>
+        </td>
+        <td style="text-align:center"><span style="font-weight:600;color:${p.kart?'#2e7d32':'#aaa'}">${p.kart?'1':'0'}</span></td>
+        <td onclick="event.stopPropagation()">
+          <span class="act-link" onclick="editPersonel('${p.id}')">Düzenle</span>
+          <span class="act-sep">|</span>
+          <span class="act-link" onclick="openBelgeler('${p.id}')">Belgeler</span>
+          <span class="act-sep">|</span>
+          <span class="act-link" onclick="deletePersonel('${p.id}')">Sil</span>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  renderPagination(pages, total);
+}
+
+function renderPagination(pages, total){
+  const pg=document.getElementById('pagination');
+  let html=`<button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage<=1?'disabled':''}>◀</button>`;
+  for(let i=1;i<=pages;i++){
+    if(pages<=7 || Math.abs(i-currentPage)<=2 || i===1 || i===pages){
+      html+=`<button class="pg-btn ${i===currentPage?'active':''}" onclick="goPage(${i})">${i}</button>`;
+    } else if(Math.abs(i-currentPage)===3){
+      html+=`<span style="padding:0 4px;color:#aaa">…</span>`;
+    }
+  }
+  html+=`<button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage>=pages?'disabled':''}>▶</button>`;
+  html+=`<span style="margin-left:8px;font-size:12px;color:#777">Toplam ${total} personel</span>`;
+  pg.innerHTML=html;
+}
+function goPage(p){ currentPage=p; renderList(); }
+function sortBy(col){ if(sortCol===col) sortDir*=-1; else {sortCol=col;sortDir=1;} renderList(); }
+
+// ─── BELGELER PAGE ───
+function openBelgeler(pid){
+  const p=persons.find(x=>x.id===pid);
+  if(!p) return;
+  activePersonId=pid;
+  document.getElementById('belge-title').textContent=`${p.ad} ${p.soyad} Belgeler`;
+  showView('belgeler');
+  renderDocTable();
+}
+
+function docStatus(pid, doc){
+  const st=(docs_state[pid]||{})[doc.id]||{};
+  if(!st.file) return (doc.req1||doc.req2)?'missing':'optional';
+  if(doc.hasDate && st.endDate){
+    const end=new Date(st.endDate), today=new Date();
+    const diff=(end-today)/(1000*60*60*24);
+    if(diff<0) return 'expired';
+    if(diff<=30) return 'expiring';
+  }
+  return 'uploaded';
+}
+
+function renderDocTable(){
+  if(!activePersonId) return;
+  const pid=activePersonId;
+  const catFilter=document.getElementById('doc-filter-cat').value;
+  const stFilter=document.getElementById('doc-filter-status').value;
+  const st=docs_state[pid]||{};
+  let idx=0;
+  let cats={};
+  DOCS.forEach(d=>{
+    if(catFilter && !d.cat.includes(catFilter)) return;
+    const dSt=docStatus(pid,d);
+    if(stFilter==='missing' && dSt!=='missing') return;
+    if(stFilter==='uploaded' && dSt!=='uploaded' && dSt!=='expiring') return;
+    if(stFilter==='expired' && dSt!=='expired') return;
+    if(!cats[d.cat]) cats[d.cat]=[];
+    cats[d.cat].push(d);
+  });
+  // progress
+  const allReq=DOCS.filter(d=>d.req1||d.req2);
+  let uploaded=0,expired=0,expiring=0,missing=0;
+  allReq.forEach(d=>{
+    const s=docStatus(pid,d);
+    if(s==='uploaded'||s==='expiring') uploaded++;
+    if(s==='expired') expired++;
+    if(s==='expiring') expiring++;
+    if(s==='missing') missing++;
+  });
+  const pct=Math.round((uploaded/allReq.length)*100);
+  const pbarCol=expired>0?'#e53935':pct===100?'#4caf50':'#1976d2';
+  document.getElementById('det-prog-bar').style.width=pct+'%';
+  document.getElementById('det-prog-bar').style.background=pbarCol;
+  document.getElementById('det-prog-pct').textContent='%'+pct;
+  document.getElementById('det-prog-pct').style.color=pbarCol;
+  document.getElementById('det-stats').innerHTML=`
+    <span style="font-size:12px;color:#2e7d32">✅ ${uploaded} yüklendi</span>
+    <span style="font-size:12px;color:#c62828">❌ ${missing} eksik</span>
+    ${expired?`<span style="font-size:12px;color:#c62828">🚨 ${expired} süresi dolmuş</span>`:''}
+    ${expiring?`<span style="font-size:12px;color:#e65100">⚠️ ${expiring} yakında dolacak</span>`:''}
+  `;
+  let html='';
+  Object.entries(cats).forEach(([cat,docs])=>{
+    html+=`<tr class="cat-row" onclick="toggleCatSection('cat-${cat.replace(/\s+/g,'_')}')">
+      <td colspan="11">📂 ${cat} <small style="color:#888;font-weight:400">(${docs.length} belge)</small> <span style="float:right;font-size:11px;color:#aaa">▼</span></td>
+    </tr>`;
+    docs.forEach(d=>{
+      idx++;
+      const s=st[d.id]||{};
+      const dSt=docStatus(pid,d);
+      const endCls=dSt==='expired'?'date-exp':dSt==='expiring'?'date-warn':'';
+      const uploaded=s.file;
+      const now=new Date().toLocaleString('tr-TR');
+      const recTarih=s.uploadedAt?new Date(s.uploadedAt).toLocaleString('tr-TR'):'';
+      html+=`<tr id="docrow-${d.id}" style="display:table-row" class="cat-sect cat-${cat.replace(/\s+/g,'_')}">
+        <td style="color:#aaa;font-size:12px;font-family:monospace">${idx}</td>
+        <td class="doc-name-cell">
+          <div class="doc-nm">${d.name}</div>
+          ${d.note?`<div class="doc-note">${d.note}</div>`:''}
+        </td>
+        <td style="text-align:center">${d.req1?`<span class="chk-yes">✓</span>`:''}</td>
+        <td style="text-align:center">${d.req2?`<span class="chk-yes">✓</span>`:''}</td>
+        <td style="text-align:center">${d.req3?`<span class="chk-yes">✓</span>`:''}</td>
+        <td>${d.hasDate?`<input class="date-inp" type="date" value="${s.startDate||''}" onchange="setDocDate('${pid}','${d.id}','startDate',this.value)">`:''}</td>
+        <td>${d.hasDate?`<input class="date-inp ${endCls}" type="date" value="${s.endDate||''}" onchange="setDocDate('${pid}','${d.id}','endDate',this.value)">`:''}</td>
+        <td class="ts">${recTarih}</td>
+        <td class="ts">${recTarih}</td>
+        <td class="note-txt">${d.note||''}</td>
+        <td>
+          ${uploaded
+            ? `<span class="act-link" onclick="viewDoc('${pid}','${d.id}')">Görüntüle</span><span class="act-sep">|</span><label class="act-link" for="upl-${pid}-${d.id}" style="cursor:pointer">Değiştir</label>`
+            : `<label class="upload-label" for="upl-${pid}-${d.id}">⬆ Yükle</label>`
+          }
+          <input class="upload-hidden" type="file" id="upl-${pid}-${d.id}" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.xls,.xlsx" onchange="handleUpload('${pid}','${d.id}',this)">
+          ${uploaded?`<span class="act-sep">|</span><span class="act-link" style="color:#c62828" onclick="deleteDoc('${pid}','${d.id}')">Sil</span>`:''}
+        </td>
+      </tr>`;
+    });
+  });
+  document.getElementById('docBody').innerHTML=html||`<tr><td colspan="11" style="text-align:center;padding:32px;color:#aaa">Belge bulunamadı.</td></tr>`;
+}
+
+function toggleCatSection(cls){
+  document.querySelectorAll('.'+cls).forEach(el=>{
+    el.style.display=el.style.display==='none'?'table-row':'none';
+  });
+}
+
+function setDocDate(pid,docId,field,val){
+  if(!docs_state[pid]) docs_state[pid]={};
+  if(!docs_state[pid][docId]) docs_state[pid][docId]={};
+  docs_state[pid][docId][field]=val;
+  saveDocs();
+  renderDocTable();
+}
+
+function handleUpload(pid,docId,input){
+  const file=input.files[0];
+  if(!file) return;
+  if(file.size>10*1024*1024){ showToast('Dosya 10 MB sınırını aşıyor.','err'); return; }
+  if(!docs_state[pid]) docs_state[pid]={};
+  if(!docs_state[pid][docId]) docs_state[pid][docId]={};
+  const prev=docs_state[pid][docId];
+  docs_state[pid][docId]={...prev, file:file.name, fileSize:file.size, fileType:file.type, uploadedAt:new Date().toISOString()};
+  saveDocs();
+  showToast(`"${file.name}" yüklendi.`,'ok');
+  renderDocTable();
+}
+
+function deleteDoc(pid,docId){
+  if(!confirm('Bu evrakı silmek istediğinizden emin misiniz?')) return;
+  if(docs_state[pid]&&docs_state[pid][docId]){
+    const d=docs_state[pid][docId];
+    delete d.file; delete d.fileSize; delete d.fileType; delete d.uploadedAt;
+  }
+  saveDocs(); showToast('Evrak silindi.','err'); renderDocTable();
+}
+
+function viewDoc(pid,docId){
+  const s=(docs_state[pid]||{})[docId]||{};
+  if(!s.file) return;
+  const doc=DOCS.find(d=>d.id===docId);
+  const ext=(s.file.split('.').pop()||'').toLowerCase();
+  const ico={'pdf':'📕','doc':'📘','docx':'📘','xls':'📗','xlsx':'📗','jpg':'🖼️','jpeg':'🖼️','png':'🖼️'}[ext]||'📄';
+  document.getElementById('vm-title').textContent=doc?doc.name:'Evrak';
+  document.getElementById('vm-sub').textContent=doc?doc.cat:'';
+  document.getElementById('vm-ico').textContent=ico;
+  document.getElementById('vm-nm').textContent=s.file;
+  document.getElementById('vm-sz').textContent=s.fileSize?(s.fileSize/1024).toFixed(1)+' KB':'';
+  openModal('viewModal');
+}
+
+// ─── ADD / EDIT PERSONEL ───
+function showAddModal(){ 
+  editingId=null;
+  document.getElementById('addModalTitle').textContent='Personel Ekle';
+  ['f-ad','f-soyad','f-meslek','f-sicil','f-tel'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f-entry').value='';
+  document.getElementById('f-dept').value='Saha Operasyonları';
+  document.getElementById('f-kart').value='';
+  openModal('addModal');
+}
+function editPersonel(pid){
+  const p=persons.find(x=>x.id===pid); if(!p) return;
+  editingId=pid;
+  document.getElementById('addModalTitle').textContent='Personel Düzenle';
+  document.getElementById('f-ad').value=p.ad;
+  document.getElementById('f-soyad').value=p.soyad;
+  document.getElementById('f-meslek').value=p.meslek;
+  document.getElementById('f-dept').value=p.dept||'Saha Operasyonları';
+  document.getElementById('f-entry').value=p.entry||'';
+  document.getElementById('f-sicil').value=p.sicil||'';
+  document.getElementById('f-tel').value=p.tel||'';
+  document.getElementById('f-kart').value=p.kart||'';
+  openModal('addModal');
+}
+function savePersonel(){
+  const ad=document.getElementById('f-ad').value.trim();
+  const soyad=document.getElementById('f-soyad').value.trim();
+  if(!ad||!soyad){ showToast('Ad ve Soyad zorunludur.','err'); return; }
+  const obj={ad,soyad,meslek:document.getElementById('f-meslek').value.trim(),
+    dept:document.getElementById('f-dept').value,entry:document.getElementById('f-entry').value,
+    sicil:document.getElementById('f-sicil').value.trim(),tel:document.getElementById('f-tel').value.trim(),
+    kart:document.getElementById('f-kart').value};
+  if(editingId){ Object.assign(persons.find(p=>p.id===editingId),obj); showToast('Personel güncellendi.','ok'); }
+  else { persons.push({...obj, id:'p'+Date.now()}); showToast(`${ad} ${soyad} eklendi.`,'ok'); }
+  savePersons(); closeModal('addModal'); renderList();
+}
+function deletePersonel(pid){
+  const p=persons.find(x=>x.id===pid); if(!p) return;
+  if(!confirm(`"${p.ad} ${p.soyad}" silinecek. Emin misiniz?`)) return;
+  persons=persons.filter(x=>x.id!==pid);
+  savePersons(); showToast('Personel silindi.','err'); renderList();
+}
+
+// ─── CSV ───
+function showCSVModal(){ csvRows=[]; document.getElementById('csvPreview').style.display='none'; document.getElementById('csvPreview').innerHTML=''; document.getElementById('csvImportBtn').disabled=true; document.getElementById('dropZone').querySelector('.drop-zone-txt').innerHTML='<b>Tıklayın</b> veya dosyayı buraya sürükleyin<br><span style="font-size:11px;color:#aaa">CSV veya Excel formatı (.csv)</span>'; openModal('csvModal'); }
+function dragOver(e){ e.preventDefault(); document.getElementById('dropZone').classList.add('drag'); }
+function dragLeave(e){ document.getElementById('dropZone').classList.remove('drag'); }
+function dropFile(e){ e.preventDefault(); document.getElementById('dropZone').classList.remove('drag'); const f=e.dataTransfer.files[0]; if(f) parseCSVFile(f); }
+function loadCSV(input){ if(input.files[0]) parseCSVFile(input.files[0]); }
+function parseCSVFile(file){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const text=e.target.result;
+    const lines=text.split(/\r?\n/).filter(l=>l.trim());
+    if(lines.length<2){ showToast('CSV dosyası boş veya hatalı.','err'); return; }
+    csvRows=[];
+    for(let i=1;i<lines.length;i++){
+      const cols=lines[i].split(/[,;]/).map(c=>c.replace(/^"|"$/g,'').trim());
+      if(cols.length>=2 && cols[0]) csvRows.push({ad:cols[0],soyad:cols[1]||'',meslek:cols[2]||'',dept:cols[3]||'Saha Operasyonları',entry:cols[4]||'',sicil:cols[5]||'',tel:cols[6]||'',kart:''});
+    }
+    const prev=document.getElementById('csvPreview');
+    prev.style.display='block';
+    prev.innerHTML=`<b>${csvRows.length} personel bulundu:</b><br>`+csvRows.slice(0,5).map(r=>`• ${r.ad} ${r.soyad} — ${r.meslek}`).join('<br>')+(csvRows.length>5?`<br>… ve ${csvRows.length-5} kişi daha`:'');
+    document.getElementById('csvImportBtn').disabled=false;
+    document.getElementById('dropZone').querySelector('.drop-zone-txt').innerHTML=`✅ <b>${file.name}</b> yüklendi (${csvRows.length} satır)`;
+  };
+  reader.readAsText(file,'UTF-8');
+}
+function importCSV(){
+  if(!csvRows.length) return;
+  let added=0;
+  csvRows.forEach(r=>{ persons.push({...r, id:'p'+Date.now()+Math.random()}); added++; });
+  savePersons(); closeModal('csvModal'); renderList();
+  showToast(`${added} personel başarıyla eklendi.`,'ok');
+  csvRows=[];
+}
+function downloadTemplate(){
+  const header='Ad,Soyad,Meslek,Departman,İşe Giriş Tarihi,Sicil No,Telefon\n';
+  const ex='MEHMET,YILMAZ,Vinç Operatörü,Saha Operasyonları,2024-01-15,0001,0500 000 00 00\n';
+  const blob=new Blob(['\uFEFF'+header+ex],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='personel_sablonu.csv'; a.click();
+}
+
+// ─── EXPORT ───
+function exportReport(){
+  let lines=['\uFEFF'+'Personel,Meslek,Toplam Zorunlu,Yüklenen,Eksik,Tamamlama %,Durum'];
+  persons.forEach(p=>{
+    const c=getPersonCompletion(p.id);
+    const st=getPersonStatus(c);
+    lines.push([`"${p.ad} ${p.soyad}"`,`"${p.meslek}"`,c.total,c.uploaded,c.total-c.uploaded,c.pct+'%',st==='ok'?'Tamamlandı':st==='exp'?'Süresi Dolmuş':'Eksik Var'].join(','));
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='eksik_evrak_raporu.csv'; a.click();
+  showToast('Rapor indiriliyor...','ok');
+}
+function exportCSV(){
+  let lines=['\uFEFF'+'Ad,Soyad,Meslek,Departman,Sicil No,İşe Giriş,Tamamlama %'];
+  persons.forEach(p=>{
+    const c=getPersonCompletion(p.id);
+    lines.push([`"${p.ad}"`,`"${p.soyad}"`,`"${p.meslek}"`,`"${p.dept||''}"`,p.sicil||'',p.entry||'',c.pct+'%'].join(','));
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='personel_listesi.csv'; a.click();
+}
+function exportPersonReport(){
+  if(!activePersonId) return;
+  const p=persons.find(x=>x.id===activePersonId); if(!p) return;
+  const st=docs_state[activePersonId]||{};
+  let lines=['\uFEFF'+`${p.ad} ${p.soyad} Evrak Raporu\n`];
+  lines.push('Belge Adı,Kategori,Zorunlu,Durum,Başlangıç,Bitiş,Dosya');
+  DOCS.forEach(d=>{
+    const s=st[d.id]||{};
+    const dSt=docStatus(activePersonId,d);
+    lines.push([`"${d.name}"`,d.cat,(d.req1||d.req2)?'Evet':'Hayır',dSt,s.startDate||'',s.endDate||'',s.file||''].join(','));
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`${p.ad}_${p.soyad}_evrak_raporu.csv`; a.click();
+}
+
+// ─── UI HELPERS ───
+function showView(v){
+  document.getElementById('view-list').style.display=v==='list'?'block':'none';
+  document.getElementById('view-belgeler').style.display=v==='belgeler'?'block':'none';
+  document.getElementById('view-expiry').style.display=v==='expiry'?'block':'none';
+  if(v==='list'){ renderList(); activePersonId=null; }
+  if(v==='expiry'){ renderExpiryView(); }
+}
+
+function showExpiryView(){ showView('expiry'); }
+
+function renderExpiryView(){
+  const today=new Date();
+  const rows=[];
+  persons.forEach(p=>{
+    const st=docs_state[p.id]||{};
+    DOCS.filter(d=>d.hasDate).forEach(d=>{
+      const s=st[d.id]||{};
+      if(!s.endDate) return;
+      const end=new Date(s.endDate);
+      const diff=Math.round((end-today)/(1000*60*60*24));
+      rows.push({person:p, doc:d, startDate:s.startDate||'', endDate:s.endDate, diff, hasFile:!!s.file});
+    });
+  });
+  rows.sort((a,b)=>a.diff-b.diff);
+
+  const expired=rows.filter(r=>r.diff<0).length;
+  const soon=rows.filter(r=>r.diff>=0&&r.diff<=30).length;
+  const valid=rows.filter(r=>r.diff>30).length;
+
+  document.getElementById('expiryStats').innerHTML=`
+    <div style="background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px">
+      <div style="font-size:22px">📋</div>
+      <div><div style="font-size:11px;color:#777;font-weight:600;text-transform:uppercase">Toplam Süreli</div><div style="font-size:22px;font-weight:700;color:#1e3a50">${rows.length}</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px">
+      <div style="font-size:22px">🔴</div>
+      <div><div style="font-size:11px;color:#777;font-weight:600;text-transform:uppercase">Süresi Dolmuş</div><div style="font-size:22px;font-weight:700;color:#c62828">${expired}</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px">
+      <div style="font-size:22px">🟡</div>
+      <div><div style="font-size:11px;color:#777;font-weight:600;text-transform:uppercase">30 Gün İçinde</div><div style="font-size:22px;font-weight:700;color:#e65100">${soon}</div></div>
+    </div>
+    <div style="background:#fff;border:1px solid #dde3ec;border-radius:6px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px">
+      <div style="font-size:22px">🟢</div>
+      <div><div style="font-size:11px;color:#777;font-weight:600;text-transform:uppercase">Geçerli</div><div style="font-size:22px;font-weight:700;color:#2e7d32">${valid}</div></div>
+    </div>`;
+
+  if(!rows.length){
+    document.getElementById('expiryBody').innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:#aaa">Tarih girilmiş süreli belge bulunamadı.<br><span style="font-size:12px">Evrak sayfalarından belgelere başlangıç/bitiş tarihi giriniz.</span></td></tr>`;
+    return;
+  }
+
+  document.getElementById('expiryBody').innerHTML=rows.map(r=>{
+    const av=avColor(r.person.ad+r.person.soyad);
+    const ini=initials(r.person.ad,r.person.soyad);
+    let statusHtml, rowBg='';
+    if(r.diff<0){
+      statusHtml=`<span class="sbadge sbadge-err">🔴 ${Math.abs(r.diff)} gün önce doldu</span>`;
+      rowBg='background:#fff8f8;';
+    } else if(r.diff<=30){
+      statusHtml=`<span class="sbadge sbadge-warn">🟡 ${r.diff} gün kaldı</span>`;
+      rowBg='background:#fffde7;';
+    } else {
+      statusHtml=`<span class="sbadge sbadge-ok">🟢 ${r.diff} gün kaldı</span>`;
+    }
+    return `<tr style="${rowBg}cursor:pointer" onclick="openBelgeler('${r.person.id}')">
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div style="width:28px;height:28px;border-radius:50%;background:${av};color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0">${ini}</div>
+        <span style="font-weight:500;font-size:13px">${r.person.ad} ${r.person.soyad}</span>
+      </div></td>
+      <td style="font-size:12px;color:#666">${r.person.dept||''}</td>
+      <td style="font-size:12.5px;font-weight:500">${r.doc.name}</td>
+      <td style="font-size:12px;color:#555">${r.startDate||'—'}</td>
+      <td style="font-size:12px;font-weight:600;color:${r.diff<0?'#c62828':r.diff<=30?'#e65100':'#333'}">${r.endDate}</td>
+      <td style="font-size:12px;font-weight:700;color:${r.diff<0?'#c62828':r.diff<=30?'#e65100':'#2e7d32'}">${r.diff<0?'— doldu —':r.diff+' gün'}</td>
+      <td>${statusHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function exportExpiryReport(){
+  const today=new Date();
+  let lines=['\uFEFF'+'Personel,Departman,Belge,Başlangıç Tarihi,Bitiş Tarihi,Kalan Gün,Durum'];
+  persons.forEach(p=>{
+    const st=docs_state[p.id]||{};
+    DOCS.filter(d=>d.hasDate).forEach(d=>{
+      const s=st[d.id]||{};
+      if(!s.endDate) return;
+      const end=new Date(s.endDate);
+      const diff=Math.round((end-today)/(1000*60*60*24));
+      const durum=diff<0?'Süresi Dolmuş':diff<=30?'Yakında Dolacak':'Geçerli';
+      lines.push([`"${p.ad} ${p.soyad}"`,`"${p.dept||''}"`,`"${d.name}"`,s.startDate||'',s.endDate,diff<0?diff+'':diff+'',durum].join(','));
+    });
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='sureli_belgeler_raporu.csv'; a.click();
+  showToast('Süreli belgeler raporu indiriliyor...','ok');
+}
+
+function showHelp(){ openModal('helpModal'); }
+
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function toggleSidebar(){ const s=document.getElementById('sidebar'); s.style.transform=s.style.transform?'':((getComputedStyle(s).transform==='none'||!getComputedStyle(s).transform)?'translateX(-100%)':''); }
+function toggleNav(el,subId){
+  el.classList.toggle('open');
+  const sub=document.getElementById(subId);
+  sub.classList.toggle('open');
+}
+
+let toastTimer;
+function showToast(msg,type){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className=`toast show toast-${type}`;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),3000);
+}
+
+// ─── CLOSE MODAL ON OVERLAY CLICK ───
+document.querySelectorAll('.overlay').forEach(ov=>{
+  ov.addEventListener('click',e=>{ if(e.target===ov) ov.classList.remove('open'); });
+});
+
+// ─── INIT ───
+loadState();
+renderList();
+</script>
+</body>
+</html>
